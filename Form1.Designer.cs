@@ -110,6 +110,8 @@ namespace JsonConverter
             // filePathLabel
             // 
             this.filePathLabel.AllowDrop = true;
+            this.filePathLabel.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.filePathLabel.Location = new System.Drawing.Point(10, 25);
             this.filePathLabel.Name = "filePathLabel";
             this.filePathLabel.Size = new System.Drawing.Size(411, 26);
