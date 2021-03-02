@@ -43,7 +43,7 @@ namespace JsonConverter
 
         private void convertBtn_Click(object sender, EventArgs e)
         {
-            Main.instance.StartConvert(openFileDialog1.FileName);
+            Main.instance.StartConvert(filePathLabel.Text);
         }
 
         public void OnGetFilePath(string filePath)

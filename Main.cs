@@ -106,7 +106,7 @@ namespace JsonConverter
 
                 var directoreName = Path.GetDirectoryName(filePath);
                 var fileName = Path.GetFileNameWithoutExtension(filePath);
-                var savePath = $"{directoreName}\\{fileName}_new.json";
+                var savePath = $"{directoreName}\\{fileName}.json";
 
                 await JsonHelper.WriteJsonFileAsync(csvData, savePath);
 
