@@ -1,23 +1,35 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace JsonConverter
 {
     public partial class Form1 : Form
     {
+        public string INITIAL_INFOMATION { private set; get; }
+
         public Form1()
         {
             InitializeComponent();
 
+            INITIAL_INFOMATION = this.filePathLabel.Text;
+
             EventDispatcher.instance.UpdateInformation += Instance_UpdateInformation;
+            this.filePathLabel.DragEnter += Form1_DragEnter;
+            this.filePathLabel.DragDrop += Form1_DragDrop;
+        }
+
+        private void Form1_DragEnter(object sender, DragEventArgs e)
+        {
+            if (e.Data.GetDataPresent(DataFormats.FileDrop))
+                e.Effect = DragDropEffects.Copy;
+        }
+
+        private void Form1_DragDrop(object sender, DragEventArgs e)
+        {
+            var files = (string[])e.Data.GetData(DataFormats.FileDrop);
+            if (files.Length > 0)
+                OnGetFilePath(files[0]);
         }
 
         private void borwseBtn_Click(object sender, EventArgs e)
@@ -36,17 +48,21 @@ namespace JsonConverter
 
         public void OnGetFilePath(string filePath)
         {
-            var extension = Path.GetExtension(filePath);
             var info = string.Empty;
-            if (extension == ".json")
-                info = "Json -> Csv";
-            else if (extension == ".csv")
-                info = "Csv -> Json";
+            switch (Main.instance.ForFileType(filePath))
+            {
+                case FileType.Json:
+                    info = "Json -> Csv";
+                    break;
+                case FileType.Csv:
+                    info = "Csv -> Json";
+                    break;
+            }
 
             var enabled = !string.IsNullOrEmpty(info);
-            filePathText.Text = filePath;
+            filePathLabel.Text = enabled ? filePath : INITIAL_INFOMATION;
             convertBtn.Enabled = enabled;
-            UpdateInfoLabel(enabled ? info : "Error File");
+            UpdateInfoLabel(enabled ? info : "錯誤的檔案格式");
         }
 
         private void UpdateInfoLabel(string info)

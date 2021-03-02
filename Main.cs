@@ -1,9 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace JsonConverter
 {
@@ -23,11 +20,29 @@ namespace JsonConverter
 
         public void StartConvert(string filePath)
         {
+            switch (ForFileType(filePath))
+            {
+                case FileType.Json:
+                    JsonConvertToCsv(filePath);
+                    break;
+                case FileType.Csv:
+                    CsvConvertToJson(filePath);
+                    break;
+                default:
+                    EventDispatcher.instance.OnUpdateInformation("錯誤的檔案格式");
+                    break;
+            }
+        }
+
+        public FileType ForFileType(string filePath)
+        {
             var extension = Path.GetExtension(filePath);
-            if (extension == ".json")
-                JsonConvertToCsv(filePath);
-            else if (extension == ".csv")
-                CsvConvertToJson(filePath);
+            if (".json" == extension)
+                return FileType.Json;
+            else if (".csv" == extension)
+                return FileType.Csv;
+            else
+                return FileType.None;
         }
 
         #region Json
