@@ -29,7 +29,7 @@ namespace JsonConverter
                     CsvConvertToJson(filePath);
                     break;
                 default:
-                    EventDispatcher.instance.OnUpdateInformation("錯誤的檔案格式");
+                    EventDispatcher.instance.OnUpdateInformation(Message.ERROR_INVALID_FILE_TYPE);
                     break;
             }
         }

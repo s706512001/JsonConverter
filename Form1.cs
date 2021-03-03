@@ -62,7 +62,7 @@ namespace JsonConverter
             var enabled = !string.IsNullOrEmpty(info);
             filePathLabel.Text = enabled ? filePath : INITIAL_INFOMATION;
             convertBtn.Enabled = enabled;
-            UpdateInfoLabel(enabled ? info : "錯誤的檔案格式");
+            UpdateInfoLabel(enabled ? info : Message.ERROR_INVALID_FILE_TYPE);
         }
 
         private void UpdateInfoLabel(string info)
