@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading.Tasks;
 
 namespace JsonConverter
 {
@@ -18,15 +19,25 @@ namespace JsonConverter
             }
         }
 
-        public void StartConvert(string filePath)
+        public async void CheckCommandLineInput()
+        {
+            var args = Environment.GetCommandLineArgs();
+            if (args.Length >= 2 && CheckFilePathValid(args[1]))
+            {
+                await StartConvertAsync(args[1]);
+                Environment.Exit(0);
+            }
+        }
+
+        public async Task StartConvertAsync(string filePath)
         {
             switch (ForFileType(filePath))
             {
                 case FileType.Json:
-                    JsonConvertToCsv(filePath);
+                    await JsonConvertToCsv(filePath);
                     break;
                 case FileType.Csv:
-                    CsvConvertToJson(filePath);
+                    await CsvConvertToJson(filePath);
                     break;
                 default:
                     EventDispatcher.instance.OnUpdateInformation(Message.ERROR_INVALID_FILE_TYPE);
@@ -60,8 +71,23 @@ namespace JsonConverter
             return result;
         }
 
+        private bool CheckFilePathValid(string filePath)
+        {
+            if (FileType.None == ForFileType(filePath))
+            {
+                EventDispatcher.instance.OnUpdateInformationWithFilePath(filePath, Message.ERROR_INVALID_FILE_TYPE);
+                return false;
+            }
+            else if (false == File.Exists(filePath))
+            {
+                EventDispatcher.instance.OnUpdateInformationWithFilePath(filePath, Message.ERROR_FILE_NOT_EXIST);
+                return false;
+            }
+            return true;
+        }
+
         #region Json
-        private async void JsonConvertToCsv(string filePath)
+        private async Task JsonConvertToCsv(string filePath)
         {
             Console.WriteLine("Start Load Json");
 
@@ -102,7 +128,7 @@ namespace JsonConverter
         #endregion Json
 
         #region Csv
-        private async void CsvConvertToJson(string filePath)
+        private async Task CsvConvertToJson(string filePath)
         {
             Console.WriteLine("Start Load Csv");
 

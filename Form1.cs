@@ -13,8 +13,11 @@ namespace JsonConverter
             this.filePathLabel.Text = Message.INFO_INPUT_FILE;
 
             EventDispatcher.instance.UpdateInformation += Instance_UpdateInformation;
+            EventDispatcher.instance.UpdateInformationWithFilePath += Instance_UpdateInformationWithFilePath;
             this.filePathLabel.DragEnter += Form1_DragEnter;
             this.filePathLabel.DragDrop += Form1_DragDrop;
+
+            Main.instance.CheckCommandLineInput();
         }
 
         private void Form1_DragEnter(object sender, DragEventArgs e)
@@ -39,9 +42,9 @@ namespace JsonConverter
                 OnGetFilePath(openFileDialog1.FileName);
         }
 
-        private void convertBtn_Click(object sender, EventArgs e)
+        private async void convertBtn_Click(object sender, EventArgs e)
         {
-            Main.instance.StartConvert(filePathLabel.Text);
+            await Main.instance.StartConvertAsync(filePathLabel.Text);
         }
 
         public void OnGetFilePath(string filePath)
@@ -73,6 +76,16 @@ namespace JsonConverter
         {
             var info = (string)args[0];
             UpdateInfoLabel(info);
+        }
+
+        private void Instance_UpdateInformationWithFilePath(object sender, params object[] args)
+        {
+            var filePath = (string)args[0];
+            var info = (string)args[1];
+
+            this.filePathLabel.Text = filePath;
+            this.infoLabel.Text = info;
+            this.convertBtn.Enabled = false;
         }
     }
 }
