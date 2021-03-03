@@ -6,13 +6,11 @@ namespace JsonConverter
 {
     public partial class Form1 : Form
     {
-        public string INITIAL_INFOMATION { private set; get; }
-
         public Form1()
         {
             InitializeComponent();
 
-            INITIAL_INFOMATION = this.filePathLabel.Text;
+            this.filePathLabel.Text = Message.INFO_INPUT_FILE;
 
             EventDispatcher.instance.UpdateInformation += Instance_UpdateInformation;
             this.filePathLabel.DragEnter += Form1_DragEnter;
@@ -48,21 +46,22 @@ namespace JsonConverter
 
         public void OnGetFilePath(string filePath)
         {
-            var info = string.Empty;
-            switch (Main.instance.ForFileType(filePath))
+            var fileType = Main.instance.ForFileType(filePath);
+            switch (fileType)
             {
                 case FileType.Json:
-                    info = "Json -> Csv";
+                    UpdateInfoLabel(Message.INFO_JSON_TO_CSV);
                     break;
                 case FileType.Csv:
-                    info = "Csv -> Json";
+                    UpdateInfoLabel(Message.INFO_CSV_TO_JSON);
+                    break;
+                default:
+                    UpdateInfoLabel(Message.ERROR_INVALID_FILE_TYPE);
                     break;
             }
 
-            var enabled = !string.IsNullOrEmpty(info);
-            filePathLabel.Text = enabled ? filePath : INITIAL_INFOMATION;
-            convertBtn.Enabled = enabled;
-            UpdateInfoLabel(enabled ? info : Message.ERROR_INVALID_FILE_TYPE);
+            filePathLabel.Text = (FileType.None != fileType) ? filePath : Message.INFO_INPUT_FILE;
+            convertBtn.Enabled = (FileType.None != fileType);
         }
 
         private void UpdateInfoLabel(string info)

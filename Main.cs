@@ -45,6 +45,21 @@ namespace JsonConverter
                 return FileType.None;
         }
 
+        private string ForSavePath(string oldPath, FileType saveType)
+        {
+            var result = $"{Path.GetDirectoryName(oldPath)}\\{Path.GetFileNameWithoutExtension(oldPath)}";
+            switch (saveType)
+            {
+                case FileType.Json:
+                    result = string.Concat(result, ".json");
+                    break;
+                case FileType.Csv:
+                    result = string.Concat(result, ".csv");
+                    break;
+            }
+            return result;
+        }
+
         #region Json
         private async void JsonConvertToCsv(string filePath)
         {
@@ -60,11 +75,7 @@ namespace JsonConverter
 
                 Console.WriteLine("Convert JsonData To Csv");
 
-                var directoreName = Path.GetDirectoryName(filePath);
-                var fileName = Path.GetFileNameWithoutExtension(filePath);
-                var savePath = $"{directoreName}\\{fileName}.csv";
-
-                await CsvHelper.WriteCsvDataAsync(jsonDataList, savePath);
+                await CsvHelper.WriteCsvDataAsync(jsonDataList, ForSavePath(filePath, FileType.Csv));
 
                 Console.WriteLine("Convert End");
 
@@ -104,11 +115,7 @@ namespace JsonConverter
 
                 Console.WriteLine("Write JsonData");
 
-                var directoreName = Path.GetDirectoryName(filePath);
-                var fileName = Path.GetFileNameWithoutExtension(filePath);
-                var savePath = $"{directoreName}\\{fileName}.json";
-
-                await JsonHelper.WriteJsonFileAsync(csvData, savePath);
+                await JsonHelper.WriteJsonFileAsync(csvData, ForSavePath(filePath, FileType.Json));
 
                 Console.WriteLine("Convert End");
 
