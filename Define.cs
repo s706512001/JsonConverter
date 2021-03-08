@@ -2,8 +2,21 @@
 {
     public enum FileType
     {
+        none,
+        /// <summary>Json</summary>
+        json,
+        /// <summary>Csv</summary>
+        csv,
+        /// <summary>Excel</summary>
+        xlsx,
+    }
+
+    public enum ConvertStrategy
+    {
         None,
-        Json,
-        Csv,
+        JsonToCsv,
+        JsonToXlsx,
+        CsvToJson,
+        XlsxToJson,
     }
 }

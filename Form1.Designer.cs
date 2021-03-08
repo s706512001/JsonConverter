@@ -30,12 +30,14 @@ namespace JsonConverter
         private void InitializeComponent()
         {
             this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.filePathLabel = new System.Windows.Forms.Label();
             this.borwseBtn = new System.Windows.Forms.Button();
             this.openFileDialog1 = new System.Windows.Forms.OpenFileDialog();
             this.groupBox2 = new System.Windows.Forms.GroupBox();
             this.infoLabel = new System.Windows.Forms.Label();
             this.convertBtn = new System.Windows.Forms.Button();
-            this.filePathLabel = new System.Windows.Forms.Label();
+            this.convertToCombo = new System.Windows.Forms.ComboBox();
+            this.convertToTitle = new System.Windows.Forms.Label();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             this.SuspendLayout();
@@ -53,6 +55,18 @@ namespace JsonConverter
             this.groupBox1.TabIndex = 0;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "Select File";
+            // 
+            // filePathLabel
+            // 
+            this.filePathLabel.AllowDrop = true;
+            this.filePathLabel.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.filePathLabel.Location = new System.Drawing.Point(10, 25);
+            this.filePathLabel.Name = "filePathLabel";
+            this.filePathLabel.Size = new System.Drawing.Size(411, 26);
+            this.filePathLabel.TabIndex = 2;
+            this.filePathLabel.Text = "選擇一個檔案，或將檔案拖曳進來";
+            this.filePathLabel.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
             // borwseBtn
             // 
@@ -99,31 +113,45 @@ namespace JsonConverter
             | System.Windows.Forms.AnchorStyles.Right)));
             this.convertBtn.Enabled = false;
             this.convertBtn.Font = new System.Drawing.Font("Consolas", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.convertBtn.Location = new System.Drawing.Point(306, 107);
+            this.convertBtn.Location = new System.Drawing.Point(306, 111);
             this.convertBtn.Name = "convertBtn";
-            this.convertBtn.Size = new System.Drawing.Size(220, 61);
+            this.convertBtn.Size = new System.Drawing.Size(220, 57);
             this.convertBtn.TabIndex = 2;
             this.convertBtn.Text = "開始轉換";
             this.convertBtn.UseVisualStyleBackColor = true;
             this.convertBtn.Click += new System.EventHandler(this.convertBtn_Click);
             // 
-            // filePathLabel
+            // convertToCombo
             // 
-            this.filePathLabel.AllowDrop = true;
-            this.filePathLabel.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            this.convertToCombo.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.convertToCombo.Enabled = false;
+            this.convertToCombo.Font = new System.Drawing.Font("Consolas", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.convertToCombo.FormattingEnabled = true;
+            this.convertToCombo.Location = new System.Drawing.Point(405, 85);
+            this.convertToCombo.Name = "convertToCombo";
+            this.convertToCombo.Size = new System.Drawing.Size(121, 22);
+            this.convertToCombo.TabIndex = 3;
+            // 
+            // convertToTitle
+            // 
+            this.convertToTitle.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.filePathLabel.Location = new System.Drawing.Point(10, 25);
-            this.filePathLabel.Name = "filePathLabel";
-            this.filePathLabel.Size = new System.Drawing.Size(411, 26);
-            this.filePathLabel.TabIndex = 2;
-            this.filePathLabel.Text = "選擇一個檔案，或將檔案拖曳進來";
-            this.filePathLabel.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.convertToTitle.Font = new System.Drawing.Font("Consolas", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.convertToTitle.Location = new System.Drawing.Point(268, 86);
+            this.convertToTitle.Name = "convertToTitle";
+            this.convertToTitle.RightToLeft = System.Windows.Forms.RightToLeft.No;
+            this.convertToTitle.Size = new System.Drawing.Size(133, 19);
+            this.convertToTitle.TabIndex = 4;
+            this.convertToTitle.Text = "->";
+            this.convertToTitle.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
             // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(537, 183);
+            this.Controls.Add(this.convertToTitle);
+            this.Controls.Add(this.convertToCombo);
             this.Controls.Add(this.convertBtn);
             this.Controls.Add(this.groupBox2);
             this.Controls.Add(this.groupBox1);
@@ -146,6 +174,8 @@ namespace JsonConverter
         private System.Windows.Forms.Label infoLabel;
         private System.Windows.Forms.Button convertBtn;
         private System.Windows.Forms.Label filePathLabel;
+        private System.Windows.Forms.ComboBox convertToCombo;
+        private System.Windows.Forms.Label convertToTitle;
     }
 }
 

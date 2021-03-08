@@ -22,58 +22,102 @@ namespace JsonConverter
         public async void CheckCommandLineInput()
         {
             var args = Environment.GetCommandLineArgs();
-            if (args.Length >= 2 && CheckFilePathValid(args[1]))
+            if (args.Length >= 3 && CheckFilePathValid(args[1]) && CheckFileTypeValid(args[2]))
             {
-                await StartConvertAsync(args[1]);
+                await StartConvertAsync(args[1], ForStringToFileType(args[2]));
                 Environment.Exit(0);
             }
         }
 
-        public async Task StartConvertAsync(string filePath)
+        public async Task StartConvertAsync(string filePath, FileType convertType)
         {
-            switch (ForFileType(filePath))
+            switch (ForConvertStrategy(filePath, convertType))
             {
-                case FileType.Json:
+                case ConvertStrategy.JsonToCsv:
                     await JsonConvertToCsv(filePath);
                     break;
-                case FileType.Csv:
+                case ConvertStrategy.JsonToXlsx:
+                    break;
+                case ConvertStrategy.CsvToJson:
                     await CsvConvertToJson(filePath);
+                    break;
+                case ConvertStrategy.XlsxToJson:
                     break;
                 default:
                     EventDispatcher.instance.OnUpdateInformation(Message.ERROR_INVALID_FILE_TYPE);
                     break;
             }
+            //switch (ForPathFileType(filePath))
+            //{
+            //    case FileType.json:
+            //        await JsonConvertToCsv(filePath);
+            //        break;
+            //    case FileType.csv:
+            //        await CsvConvertToJson(filePath);
+            //        break;
+            //    default:
+            //        EventDispatcher.instance.OnUpdateInformation(Message.ERROR_INVALID_FILE_TYPE);
+            //        break;
+            //}
         }
 
-        public FileType ForFileType(string filePath)
+        public FileType ForPathFileType(string filePath)
         {
             var extension = Path.GetExtension(filePath);
             if (".json" == extension)
-                return FileType.Json;
+                return FileType.json;
             else if (".csv" == extension)
-                return FileType.Csv;
+                return FileType.csv;
+            else if (".xlsx" == extension)
+                return FileType.xlsx;
             else
-                return FileType.None;
+                return FileType.none;
         }
+
+        public FileType ForStringToFileType(string typeString)
+            => (FileType)Enum.Parse(typeof(FileType), typeString?.ToLower());
 
         private string ForSavePath(string oldPath, FileType saveType)
         {
             var result = $"{Path.GetDirectoryName(oldPath)}\\{Path.GetFileNameWithoutExtension(oldPath)}";
             switch (saveType)
             {
-                case FileType.Json:
+                case FileType.json:
                     result = string.Concat(result, ".json");
                     break;
-                case FileType.Csv:
+                case FileType.csv:
                     result = string.Concat(result, ".csv");
                     break;
             }
             return result;
         }
 
+        public ConvertStrategy ForConvertStrategy(string filePath, FileType convertTo)
+        {
+            switch (ForPathFileType(filePath))
+            {
+                case FileType.json:
+                    switch (convertTo)
+                    {
+                        case FileType.csv:
+                            return ConvertStrategy.JsonToCsv;
+                        case FileType.xlsx:
+                            return ConvertStrategy.JsonToXlsx;
+                        default:
+                            return ConvertStrategy.None;
+                    }    
+                case FileType.csv:
+                    return ConvertStrategy.CsvToJson;
+                case FileType.xlsx:
+                    return ConvertStrategy.None;
+                default:
+                    return ConvertStrategy.None;
+            }
+        }
+
         private bool CheckFilePathValid(string filePath)
         {
-            if (FileType.None == ForFileType(filePath))
+            if (FileType.none == ForPathFileType(filePath))
             {
                 EventDispatcher.instance.OnUpdateInformationWithFilePath(filePath, Message.ERROR_INVALID_FILE_TYPE);
                 return false;
@@ -85,6 +129,9 @@ namespace JsonConverter
             }
             return true;
         }
+
+        private bool CheckFileTypeValid(string typeString)
+            => Enum.IsDefined(typeof(FileType), typeString);
 
         #region Json
         private async Task JsonConvertToCsv(string filePath)
@@ -101,7 +148,7 @@ namespace JsonConverter
 
                 Console.WriteLine("Convert JsonData To Csv");
 
-                await CsvHelper.WriteCsvDataAsync(jsonDataList, ForSavePath(filePath, FileType.Csv));
+                await CsvHelper.WriteCsvDataAsync(jsonDataList, ForSavePath(filePath, FileType.csv));
 
                 Console.WriteLine("Convert End");
 
@@ -141,7 +188,7 @@ namespace JsonConverter
 
                 Console.WriteLine("Write JsonData");
 
-                await JsonHelper.WriteJsonFileAsync(csvData, ForSavePath(filePath, FileType.Json));
+                await JsonHelper.WriteJsonFileAsync(csvData, ForSavePath(filePath, FileType.json));
 
                 Console.WriteLine("Convert End");
 

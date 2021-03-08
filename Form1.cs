@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Windows.Forms;
 
@@ -16,6 +17,7 @@ namespace JsonConverter
             EventDispatcher.instance.UpdateInformationWithFilePath += Instance_UpdateInformationWithFilePath;
             this.filePathLabel.DragEnter += Form1_DragEnter;
             this.filePathLabel.DragDrop += Form1_DragDrop;
+            this.convertToCombo.SelectedValueChanged += ConvertToCombo_SelectedValueChanged;
 
             Main.instance.CheckCommandLineInput();
         }
@@ -44,18 +46,18 @@ namespace JsonConverter
 
         private async void convertBtn_Click(object sender, EventArgs e)
         {
-            await Main.instance.StartConvertAsync(filePathLabel.Text);
+            await Main.instance.StartConvertAsync(filePathLabel.Text, (FileType)convertToCombo.SelectedItem);
         }
 
         public void OnGetFilePath(string filePath)
         {
-            var fileType = Main.instance.ForFileType(filePath);
+            var fileType = Main.instance.ForPathFileType(filePath);
             switch (fileType)
             {
-                case FileType.Json:
+                case FileType.json:
                     UpdateInfoLabel(Message.INFO_JSON_TO_CSV);
                     break;
-                case FileType.Csv:
+                case FileType.csv:
                     UpdateInfoLabel(Message.INFO_CSV_TO_JSON);
                     break;
                 default:
@@ -63,8 +65,40 @@ namespace JsonConverter
                     break;
             }
 
-            filePathLabel.Text = (FileType.None != fileType) ? filePath : Message.INFO_INPUT_FILE;
-            convertBtn.Enabled = (FileType.None != fileType);
+            RefreshConvertToCombo(fileType);
+
+            filePathLabel.Text = (FileType.none != fileType) ? filePath : Message.INFO_INPUT_FILE;
+            convertBtn.Enabled = (FileType.none != fileType);
+        }
+
+        private void RefreshConvertToCombo(FileType fileType)
+        {
+            var convertToList = new List<FileType>();
+            switch (fileType)
+            {
+                case FileType.json:
+                    convertToTitle.Text = Message.INFO_CONVERT_TO_TITLE_JSON;
+                    convertToList.Add(FileType.csv);
+                    convertToList.Add(FileType.xlsx);
+                    break;
+                case FileType.csv:
+                    convertToTitle.Text = Message.INFO_CONVERT_TO_TITLE_CSV;
+                    convertToList.Add(FileType.json);
+                    break;
+                case FileType.xlsx:
+                    convertToTitle.Text = Message.INFO_CONVERT_TO_TITLE_XLSX;
+                    convertToList.Add(FileType.json);
+                    break;
+                default:
+                    break;
+            }
+            convertToCombo.DataSource = convertToList.ToArray();
+            convertToCombo.Enabled = true;
+        }
+
+        private void ConvertToCombo_SelectedValueChanged(object sender, EventArgs e)
+        {
+            
         }
 
         private void UpdateInfoLabel(string info)
