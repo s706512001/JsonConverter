@@ -37,7 +37,7 @@ namespace JsonConverter
                     await JsonConvertToCsv(filePath);
                     break;
                 case ConvertStrategy.JsonToXlsx:
-                    //await JsonConvertToXlsx(filePath);
+                    await JsonConvertToXlsx(filePath);
                     break;
                 case ConvertStrategy.CsvToJson:
                     await CsvConvertToJson(filePath);

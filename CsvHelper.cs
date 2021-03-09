@@ -49,8 +49,8 @@ namespace JsonConverter
 
         private static void WriteCsvData(List<Dictionary<string, string>> jsonData, string savePath)
         {
-            var titleList = GetTitleList(jsonData);
-            var valueList = GetValueList(jsonData, titleList);
+            var titleList = ForTitleList(jsonData);
+            var valueList = ForValueList(jsonData, titleList);
 
             using (var write = new StreamWriter(savePath))
             {
@@ -75,7 +75,7 @@ namespace JsonConverter
             }
         }
 
-        private static List<string> GetTitleList(List<Dictionary<string, string>> jsonData)
+        private static List<string> ForTitleList(List<Dictionary<string, string>> jsonData)
         {
             var result = new List<string>();
 
@@ -97,7 +97,7 @@ namespace JsonConverter
             return result;
         }
 
-        private static List<List<string>> GetValueList(List<Dictionary<string, string>> jsonData, List<string> titleList)
+        private static List<List<string>> ForValueList(List<Dictionary<string, string>> jsonData, List<string> titleList)
         {
             var result = new List<List<string>>();
 
