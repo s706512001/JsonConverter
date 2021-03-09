@@ -37,28 +37,18 @@ namespace JsonConverter
                     await JsonConvertToCsv(filePath);
                     break;
                 case ConvertStrategy.JsonToXlsx:
+                    //await JsonConvertToXlsx(filePath);
                     break;
                 case ConvertStrategy.CsvToJson:
                     await CsvConvertToJson(filePath);
                     break;
                 case ConvertStrategy.XlsxToJson:
+                    await XlsxConvertToJson(filePath);
                     break;
                 default:
                     EventDispatcher.instance.OnUpdateInformation(Message.ERROR_INVALID_FILE_TYPE);
                     break;
             }
-            //switch (ForPathFileType(filePath))
-            //{
-            //    case FileType.json:
-            //        await JsonConvertToCsv(filePath);
-            //        break;
-            //    case FileType.csv:
-            //        await CsvConvertToJson(filePath);
-            //        break;
-            //    default:
-            //        EventDispatcher.instance.OnUpdateInformation(Message.ERROR_INVALID_FILE_TYPE);
-            //        break;
-            //}
         }
 
         public FileType ForPathFileType(string filePath)
@@ -88,6 +78,9 @@ namespace JsonConverter
                 case FileType.csv:
                     result = string.Concat(result, ".csv");
                     break;
+                case FileType.xlsx:
+                    result = string.Concat(result, ".xlsx");
+                    break;
             }
             return result;
         }
@@ -109,7 +102,7 @@ namespace JsonConverter
                 case FileType.csv:
                     return ConvertStrategy.CsvToJson;
                 case FileType.xlsx:
-                    return ConvertStrategy.None;
+                    return ConvertStrategy.XlsxToJson;
                 default:
                     return ConvertStrategy.None;
             }
@@ -160,6 +153,32 @@ namespace JsonConverter
             }
         }
 
+        private async Task JsonConvertToXlsx(string filePath)
+        {
+            Console.WriteLine("Start Load Json");
+
+            var jsonDataList = await JsonHelper.LoadJsonDataAsync(filePath);
+
+            if (null != jsonDataList)
+            {
+                Console.WriteLine("Load Json Complete");
+
+                RemoveEmptyData(jsonDataList);
+
+                Console.WriteLine("Convert JsonData To Xlsx");
+
+                await ExcelHelper.WriteXlsxDataAsync(jsonDataList, ForSavePath(filePath, FileType.xlsx));
+
+                Console.WriteLine("Convert End");
+
+                EventDispatcher.instance.OnUpdateInformation("轉換完成");
+            }
+            else
+            {
+                Console.WriteLine("Has something error, json data list is null");
+            }
+        }
+
         /// <summary>移除資料裡面，id為空的資料</summary>
         private void RemoveEmptyData(List<Dictionary<string, string>> list)
         {
@@ -196,5 +215,28 @@ namespace JsonConverter
             }
         }
         #endregion Csv
+
+        #region Excel
+        private async Task XlsxConvertToJson(string filePath)
+        {
+            Console.WriteLine("Start Load Xlsx");
+
+            var dataTable = await ExcelHelper.ReadXlsxDataAsync(filePath);
+
+            if (null != dataTable)
+            {
+                Console.WriteLine("Load Xlsx Complete");
+
+                Console.WriteLine("Write JsonData");
+
+                var jsonData = ExcelHelper.ConvertToJsonData(dataTable);
+                await JsonHelper.WriteJsonFileAsync(jsonData, ForSavePath(filePath, FileType.json));
+
+                Console.WriteLine("Convert End");
+
+                EventDispatcher.instance.OnUpdateInformation("轉換完成");
+            }
+        }
+        #endregion Excel
     }
 }

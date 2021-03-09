@@ -18,11 +18,15 @@
 
         public event EventHandler UpdateInformation;
         public event EventHandler UpdateInformationWithFilePath;
+        public event EventHandler ShowMessageBox;
 
         public void OnUpdateInformation(string information)
             => UpdateInformation(this, information);
 
         public void OnUpdateInformationWithFilePath(string filePath, string infomation)
             => UpdateInformationWithFilePath(this, filePath, infomation);
+
+        public void OnShowMessageBox(string message)
+            => ShowMessageBox(this, message);
     }
 }

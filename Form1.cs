@@ -15,6 +15,7 @@ namespace JsonConverter
 
             EventDispatcher.instance.UpdateInformation += Instance_UpdateInformation;
             EventDispatcher.instance.UpdateInformationWithFilePath += Instance_UpdateInformationWithFilePath;
+            EventDispatcher.instance.ShowMessageBox += Instance_ShowMessageBox;
             this.filePathLabel.DragEnter += Form1_DragEnter;
             this.filePathLabel.DragDrop += Form1_DragDrop;
             this.convertToCombo.SelectedValueChanged += ConvertToCombo_SelectedValueChanged;
@@ -38,7 +39,7 @@ namespace JsonConverter
         private void borwseBtn_Click(object sender, EventArgs e)
         {
             openFileDialog1.InitialDirectory = Directory.GetCurrentDirectory();
-            openFileDialog1.Filter = "json files|*.json|csv files|*.csv";
+            openFileDialog1.Filter = "json files|*.json|csv files|*.csv|xlsx files|*.xlsx";
 
             if (openFileDialog1.ShowDialog() == DialogResult.OK)
                 OnGetFilePath(openFileDialog1.FileName);
@@ -52,19 +53,8 @@ namespace JsonConverter
         public void OnGetFilePath(string filePath)
         {
             var fileType = Main.instance.ForPathFileType(filePath);
-            switch (fileType)
-            {
-                case FileType.json:
-                    UpdateInfoLabel(Message.INFO_JSON_TO_CSV);
-                    break;
-                case FileType.csv:
-                    UpdateInfoLabel(Message.INFO_CSV_TO_JSON);
-                    break;
-                default:
-                    UpdateInfoLabel(Message.ERROR_INVALID_FILE_TYPE);
-                    break;
-            }
 
+            UpdateInfoLabel(Message.INFO_SELECT_A_CONVERT_TO_TYPE);
             RefreshConvertToCombo(fileType);
 
             filePathLabel.Text = (FileType.none != fileType) ? filePath : Message.INFO_INPUT_FILE;
@@ -120,6 +110,13 @@ namespace JsonConverter
             this.filePathLabel.Text = filePath;
             this.infoLabel.Text = info;
             this.convertBtn.Enabled = false;
+        }
+
+        private void Instance_ShowMessageBox(object sender, params object[] args)
+        {
+            var message = (string)args[0];
+
+            MessageBox.Show(message);
         }
     }
 }
