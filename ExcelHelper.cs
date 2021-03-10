@@ -1,12 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
+using System.Data;
+using System.Data.OleDb;
+using System.IO;
 using System.Text;
 using System.Threading.Tasks;
-using System.Data.OleDb;
-using System.Data;
-using System.Windows.Forms;
-using System.IO;
 
 namespace JsonConverter
 {
@@ -104,6 +102,9 @@ namespace JsonConverter
 
         private static async void WriteXlsxData(List<Dictionary<string, string>> jsonData, string savePath)
         {
+            if (File.Exists(savePath))
+                File.Delete(savePath);
+
             // 提供者名稱  Microsoft.Jet.OLEDB.4.0適用於2003以前版本，Microsoft.ACE.OLEDB.12.0 適用於2007以後的版本處理 xlsx 檔案
             var providerName = "Microsoft.ACE.OLEDB.12.0;";
             // Excel版本，Excel 8.0 針對Excel2000及以上版本，Excel5.0 針對Excel97。
@@ -122,25 +123,17 @@ namespace JsonConverter
                     var cmd = connect.CreateCommand();
                     var fileName = Path.GetFileNameWithoutExtension(savePath);
                     var titleList = ForTitleList(jsonData);
+                    var valueList = ForValueList(jsonData, titleList);
 
                     cmd.CommandText = $"CREATE TABLE {fileName} ({string.Format(ForTitleString(titleList), " NTEXT")})";
                     cmd.ExecuteNonQuery();
 
-                    var paramList = new List<OleDbParameter>();
-                    for (var i = 0; i < titleList.Count; ++i)
-                    {
-                        var param = new OleDbParameter();
-                        param.ParameterName = "@" + titleList[i];
-                        paramList.Add(param);
-                    }
-                    cmd.Parameters.AddRange(paramList.ToArray());
+                    cmd.Parameters.AddRange(ForParameters(titleList));
+                    cmd.CommandText = 
+                        $"INSERT INTO {fileName} ({string.Format(ForTitleString(titleList), "")}) VALUES({ForValueString(titleList)})";
 
-                    var valueList = ForValueList(jsonData, titleList);
-                    var titleString = ForTitleString(titleList);
-                    
                     for (var i = 0; i < valueList.Count; ++i)
                     {
-                        cmd.CommandText = $"INSERT INTO {fileName} ({string.Format(titleString, "")}) VALUES(?,?,?,?,?,?)";
                         for (var j = 0; j < titleList.Count; ++j)
                             cmd.Parameters["@" + titleList[j]].Value = valueList[i][j];
 
@@ -155,14 +148,31 @@ namespace JsonConverter
             }
         }
 
+        private static OleDbParameter[] ForParameters(List<string> list)
+        {
+            var result = new List<OleDbParameter>(list.Count);
+            for (var i = 0; i < list.Count; ++i)
+                result.Add(new OleDbParameter("@" + list[i], string.Empty));
+
+            return result.ToArray();
+        }
+
         private static string ForTitleString(List<string> list)
         {
-            var result = string.Empty;
+            var result = new StringBuilder();
             for (var i = 0; i < list.Count; ++i)
-                result += string.Concat(list[i], "{0},");
-            result = result.Substring(0, result.Length - 1);
+                result.Append(string.Concat(list[i], "{0},"));
 
-            return result;
+            return result.ToString().Substring(0, result.Length - 1);
+        }
+
+        private static string ForValueString(List<string> list)
+        {
+            var result = new StringBuilder();
+            for (var i = 0; i < list.Count; ++i)
+                result.Append("?,");
+
+            return result.ToString().Substring(0, result.Length - 1);
         }
 
         private static List<string> ForTitleList(List<Dictionary<string, string>> jsonData)
