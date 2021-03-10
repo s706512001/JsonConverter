@@ -110,8 +110,7 @@ namespace JsonConverter
             var extendedString = "'Excel 8.0;";
             // 第一行是否為標題(;結尾區隔)
             var HDR = "Yes';";
-            // IMEX=1 通知驅動程序始終將「互混」數據列作為文本讀取(;結尾區隔,'文字結尾)
-            //var IMEX = "1';";
+
             var connectString =
                 $"Data Source={savePath};Provider={providerName}Extended Properties={extendedString}HDR={HDR}";
 
@@ -127,18 +126,24 @@ namespace JsonConverter
                     cmd.CommandText = $"CREATE TABLE {fileName} ({string.Format(ForTitleString(titleList), " NTEXT")})";
                     cmd.ExecuteNonQuery();
 
+                    var paramList = new List<OleDbParameter>();
+                    for (var i = 0; i < titleList.Count; ++i)
+                    {
+                        var param = new OleDbParameter();
+                        param.ParameterName = "@" + titleList[i];
+                        paramList.Add(param);
+                    }
+                    cmd.Parameters.AddRange(paramList.ToArray());
+
                     var valueList = ForValueList(jsonData, titleList);
                     var titleString = ForTitleString(titleList);
                     
                     for (var i = 0; i < valueList.Count; ++i)
                     {
-                        cmd.Parameters.Clear();
-                        //cmd.CommandText = $"INSERT INTO {fileName} ({string.Format(titleString, "")}) VALUES({ForValueString(valueList[i])})";
                         cmd.CommandText = $"INSERT INTO {fileName} ({string.Format(titleString, "")}) VALUES(?,?,?,?,?,?)";
                         for (var j = 0; j < titleList.Count; ++j)
-                        {
-                            cmd.Parameters.AddWithValue("@" + titleList[j], valueList[i][j]);
-                        }
+                            cmd.Parameters["@" + titleList[j]].Value = valueList[i][j];
+
                         await cmd.ExecuteNonQueryAsync();
                     }
                 }
@@ -148,10 +153,6 @@ namespace JsonConverter
                         connect.Close();
                 }
             }
-
-            //var titleList = ForTitleList(jsonData);
-            //var valueList = ForValueList(jsonData, titleList);
-
         }
 
         private static string ForTitleString(List<string> list)
@@ -159,26 +160,6 @@ namespace JsonConverter
             var result = string.Empty;
             for (var i = 0; i < list.Count; ++i)
                 result += string.Concat(list[i], "{0},");
-            result = result.Substring(0, result.Length - 1);
-
-            return result;
-        }
-
-        private static string ForTitleString2(List<string> list)
-        {
-            var result = string.Empty;
-            for (var i = 0; i < list.Count; ++i)
-                result += string.Concat("@", list[i], ",");
-            result = result.Substring(0, result.Length - 1);
-
-            return result;
-        }
-
-        private static string ForValueString(List<string> list)
-        {
-            var result = string.Empty;
-            for (var i = 0; i < list.Count; ++i)
-                result += string.Concat($"\"{list[i].Replace("\"", "\\\"")}\",");
             result = result.Substring(0, result.Length - 1);
 
             return result;

@@ -7,7 +7,7 @@ Command Line 使用方式
 
 ```
 ConvertTo Type (大小寫不拘)
-  - json
-  - csv
-  - xlsx
+  json
+  csv
+  xlsx
 ```
