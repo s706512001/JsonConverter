@@ -1,19 +1,22 @@
 ﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace JsonConverter
 {
-    class JsonHelper
+    class JsonProcessor : Processor
     {
-        #region Load
-        /// <summary>載入JSON檔案</summary>
-        public static Task<List<Dictionary<string, string>>> LoadJsonDataAsync(string jsonFilePath)
-            => Task.Run(() => LoadJsonData(jsonFilePath));
+        public override Task<List<Dictionary<string, string>>> ReadFileAsync(string filePath)
+            => Task.Run(() => LoadJsonData(filePath));
 
-        private static List<Dictionary<string, string>> LoadJsonData(string jsonFilePath)
+        public override Task WriteFileAsync(List<Dictionary<string, string>> jsonData, string savePath)
+            => Task.Run(() => WriteJsonFile(jsonData, savePath));
+
+        private List<Dictionary<string, string>> LoadJsonData(string jsonFilePath)
         {
             if (false == File.Exists(jsonFilePath))
             {
@@ -26,11 +29,6 @@ namespace JsonConverter
 
             return list;
         }
-        #endregion Load
-
-        #region Save
-        public static Task WriteJsonFileAsync(List<Dictionary<string, string>> jsonData, string savePath)
-            => Task.Run(() => WriteJsonFile(jsonData, savePath));
 
         private static void WriteJsonFile(List<Dictionary<string, string>> jsonData, string savePath)
         {
@@ -38,6 +36,5 @@ namespace JsonConverter
 
             File.WriteAllText(savePath, jsonString);
         }
-        #endregion Save
     }
 }

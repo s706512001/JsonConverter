@@ -1,17 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace JsonConverter
 {
-    class Processor : IProcess
+    abstract class Processor : IProcess
     {
-        public virtual Task<List<Dictionary<string, string>>> ReadFileAsync(string filePath) { return null; }
-        public virtual Task WriteFileAsync(List<Dictionary<string, string>> jsonData, string savePath) { return null; }
+        public abstract Task<List<Dictionary<string, string>>> ReadFileAsync(string filePath);
+        public abstract Task WriteFileAsync(List<Dictionary<string, string>> jsonData, string savePath);
 
-        /// <summary>只取出Json的Key</summary>
+        /// <summary>取出所有 Column 名稱</summary>
         protected virtual List<string> ForTitleList(List<Dictionary<string, string>> jsonData)
         {
             var result = new List<string>();
@@ -34,7 +31,7 @@ namespace JsonConverter
             return result;
         }
 
-        /// <summary>只取出Json的Value</summary>
+        /// <summary>取出所有 Row 的資料</summary>
         protected virtual List<List<string>> ForValueList(List<Dictionary<string, string>> jsonData, List<string> titleList)
         {
             var result = new List<List<string>>();

@@ -19,6 +19,9 @@ namespace JsonConverter
             }
         }
 
+        private IProcess mReadProcessor = null;
+        private IProcess mWriteProcessor = null;
+
         public async void CheckCommandLineInput()
         {
             var args = Environment.GetCommandLineArgs();
@@ -31,23 +34,45 @@ namespace JsonConverter
 
         public async Task StartConvertAsync(string filePath, FileType convertType)
         {
+            var wirteType = FileType.none;
             switch (ForConvertStrategy(filePath, convertType))
             {
                 case ConvertStrategy.JsonToCsv:
-                    await JsonConvertToCsv(filePath);
+                    wirteType = FileType.csv;
+                    mReadProcessor = new JsonProcessor();
+                    mWriteProcessor = new CsvProcessor();
                     break;
                 case ConvertStrategy.JsonToXlsx:
-                    await JsonConvertToXlsx(filePath);
+                    wirteType = FileType.xlsx;
+                    mReadProcessor = new JsonProcessor();
+                    mWriteProcessor = new ExcelProcessor();
                     break;
                 case ConvertStrategy.CsvToJson:
-                    await CsvConvertToJson(filePath);
+                    wirteType = FileType.json;
+                    mReadProcessor = new CsvProcessor();
+                    mWriteProcessor = new JsonProcessor();
                     break;
                 case ConvertStrategy.XlsxToJson:
-                    await XlsxConvertToJson(filePath);
+                    wirteType = FileType.json;
+                    mReadProcessor = new ExcelProcessor();
+                    mWriteProcessor = new JsonProcessor();
                     break;
                 default:
+                    mReadProcessor = null;
+                    mWriteProcessor = null;
                     EventDispatcher.instance.OnUpdateInformation(Message.ERROR_INVALID_FILE_TYPE);
                     break;
+            }
+
+            if (null != mReadProcessor && null != mWriteProcessor)
+            {
+                var jsonData = await mReadProcessor.ReadFileAsync(filePath);
+
+                RemoveEmptyData(jsonData);
+
+                await mWriteProcessor.WriteFileAsync(jsonData, ForSavePath(filePath, wirteType));
+
+                EventDispatcher.instance.OnUpdateInformation("轉換完成");
             }
         }
 
@@ -126,59 +151,6 @@ namespace JsonConverter
         private bool CheckFileTypeValid(string typeString)
             => Enum.IsDefined(typeof(FileType), typeString);
 
-        #region Json
-        private async Task JsonConvertToCsv(string filePath)
-        {
-            Console.WriteLine("Start Load Json");
-
-            var jsonDataList = await JsonHelper.LoadJsonDataAsync(filePath);
-
-            if (null != jsonDataList)
-            {
-                Console.WriteLine("Load Json Complete");
-
-                RemoveEmptyData(jsonDataList);
-
-                Console.WriteLine("Convert JsonData To Csv");
-
-                await CsvHelper.WriteCsvDataAsync(jsonDataList, ForSavePath(filePath, FileType.csv));
-
-                Console.WriteLine("Convert End");
-
-                EventDispatcher.instance.OnUpdateInformation("轉換完成");
-            }
-            else
-            {
-                Console.WriteLine("Has something error, json data list is null");
-            }
-        }
-
-        private async Task JsonConvertToXlsx(string filePath)
-        {
-            Console.WriteLine("Start Load Json");
-
-            var jsonDataList = await JsonHelper.LoadJsonDataAsync(filePath);
-
-            if (null != jsonDataList)
-            {
-                Console.WriteLine("Load Json Complete");
-
-                RemoveEmptyData(jsonDataList);
-
-                Console.WriteLine("Convert JsonData To Xlsx");
-
-                await ExcelHelper.WriteXlsxDataAsync(jsonDataList, ForSavePath(filePath, FileType.xlsx));
-
-                Console.WriteLine("Convert End");
-
-                EventDispatcher.instance.OnUpdateInformation("轉換完成");
-            }
-            else
-            {
-                Console.WriteLine("Has something error, json data list is null");
-            }
-        }
-
         /// <summary>移除資料裡面，id為空的資料</summary>
         private void RemoveEmptyData(List<Dictionary<string, string>> list)
         {
@@ -191,52 +163,5 @@ namespace JsonConverter
                     list.RemoveAt(i);
             }
         }
-        #endregion Json
-
-        #region Csv
-        private async Task CsvConvertToJson(string filePath)
-        {
-            Console.WriteLine("Start Load Csv");
-
-            // 從csv讀進來的資料，不過在讀取期間就轉成jsonData格式
-            var csvData = await CsvHelper.ReadCsvDataAsync(filePath);
-
-            if (null != csvData)
-            {
-                Console.WriteLine("Load Csv Complete");
-
-                Console.WriteLine("Write JsonData");
-
-                await JsonHelper.WriteJsonFileAsync(csvData, ForSavePath(filePath, FileType.json));
-
-                Console.WriteLine("Convert End");
-
-                EventDispatcher.instance.OnUpdateInformation("轉換完成");
-            }
-        }
-        #endregion Csv
-
-        #region Excel
-        private async Task XlsxConvertToJson(string filePath)
-        {
-            Console.WriteLine("Start Load Xlsx");
-
-            var dataTable = await ExcelHelper.ReadXlsxDataAsync(filePath);
-
-            if (null != dataTable)
-            {
-                Console.WriteLine("Load Xlsx Complete");
-
-                Console.WriteLine("Write JsonData");
-
-                var jsonData = ExcelHelper.ConvertToJsonData(dataTable);
-                await JsonHelper.WriteJsonFileAsync(jsonData, ForSavePath(filePath, FileType.json));
-
-                Console.WriteLine("Convert End");
-
-                EventDispatcher.instance.OnUpdateInformation("轉換完成");
-            }
-        }
-        #endregion Excel
     }
 }

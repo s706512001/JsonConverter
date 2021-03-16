@@ -3,18 +3,22 @@ using System.Collections.Generic;
 using System.Data;
 using System.Data.OleDb;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace JsonConverter
 {
-    class ExcelHelper
+    class ExcelProcessor : Processor
     {
-        #region Load
-        public static Task<DataTable> ReadXlsxDataAsync(string filePath)
+        public override Task<List<Dictionary<string, string>>> ReadFileAsync(string filePath)
             => Task.Run(() => ReadXlsxData(filePath));
 
-        private static DataTable ReadXlsxData(string filePath)
+        public override Task WriteFileAsync(List<Dictionary<string, string>> jsonData, string savePath)
+            => Task.Run(() => WriteXlsxData(jsonData, savePath));
+
+        #region Read
+        private List<Dictionary<string, string>> ReadXlsxData(string filePath)
         {
             // 提供者名稱  Microsoft.Jet.OLEDB.4.0適用於2003以前版本，Microsoft.ACE.OLEDB.12.0 適用於2007以後的版本處理 xlsx 檔案
             var providerName = "Microsoft.ACE.OLEDB.12.0;";
@@ -27,32 +31,14 @@ namespace JsonConverter
             var connectString =
                 $"Data Source={filePath};Provider={providerName}Extended Properties={extendedString}HDR={HDR}IMEX={IMEX}";
 
-            var result = new DataTable();
+            var dataTable = new DataTable();
             using (OleDbConnection connect = new OleDbConnection(connectString))
-                ForDataTable(connect, ForFirstSheetTableName(connect), result);
+                ForDataTable(connect, ForFirstSheetTableName(connect), dataTable);
 
-            return result;
+            return ConvertToJsonData(dataTable);
         }
 
-        public static List<Dictionary<string, string>> ConvertToJsonData(DataTable dataTable)
-        {
-            var result = new List<Dictionary<string, string>>();
-            var keys = ForTableKeys(dataTable);
-
-            for (var i = 1; i < dataTable.Rows.Count; ++i)
-            {
-                var rowData = dataTable.Rows[i].ItemArray;
-                var dict = new Dictionary<string, string>(rowData.Length);
-                for (var j = 0; j < rowData.Length; ++j)
-                    dict.Add(keys[j], rowData[j].ToString());
-
-                result.Add(dict);
-            }
-
-            return result;
-        }
-
-        private static DataTable ForDataTable(OleDbConnection connect, string sheetName, DataTable result)
+        private DataTable ForDataTable(OleDbConnection connect, string sheetName, DataTable result)
         {
             if (null == result)
                 result = new DataTable();
@@ -70,7 +56,7 @@ namespace JsonConverter
             return result;
         }
 
-        private static string ForFirstSheetTableName(OleDbConnection connect)
+        private string ForFirstSheetTableName(OleDbConnection connect)
         {
             var result = string.Empty;
             if ((null == connect) || (ConnectionState.Broken == connect.State))
@@ -87,20 +73,35 @@ namespace JsonConverter
             return result;
         }
 
-        private static string[] ForTableKeys(DataTable dataTable)
+        private List<Dictionary<string, string>> ConvertToJsonData(DataTable dataTable)
+        {
+            var result = new List<Dictionary<string, string>>();
+            var keys = ForTableKeys(dataTable);
+
+            for (var i = 1; i < dataTable.Rows.Count; ++i)
+            {
+                var rowData = dataTable.Rows[i].ItemArray;
+                var dict = new Dictionary<string, string>(rowData.Length);
+                for (var j = 0; j < rowData.Length; ++j)
+                    dict.Add(keys[j], rowData[j].ToString());
+
+                result.Add(dict);
+            }
+
+            return result;
+        }
+
+        private string[] ForTableKeys(DataTable dataTable)
         {
             return Array.ConvertAll(dataTable.Rows[0].ItemArray, ConvertToString);
 
             string ConvertToString(object obj)
                 => obj.ToString();
         }
-        #endregion Load
+        #endregion Read
 
-        #region Save
-        public static Task WriteXlsxDataAsync(List<Dictionary<string, string>> jsonData, string savePath)
-            => Task.Run(() => WriteXlsxData(jsonData, savePath));
-
-        private static async void WriteXlsxData(List<Dictionary<string, string>> jsonData, string savePath)
+        #region Write
+        private async void WriteXlsxData(List<Dictionary<string, string>> jsonData, string savePath)
         {
             if (File.Exists(savePath))
                 File.Delete(savePath);
@@ -129,7 +130,7 @@ namespace JsonConverter
                     cmd.ExecuteNonQuery();
 
                     cmd.Parameters.AddRange(ForParameters(titleList));
-                    cmd.CommandText = 
+                    cmd.CommandText =
                         $"INSERT INTO {fileName} ({string.Format(ForTitleString(titleList), "")}) VALUES({ForValueString(titleList)})";
 
                     for (var i = 0; i < valueList.Count; ++i)
@@ -148,7 +149,7 @@ namespace JsonConverter
             }
         }
 
-        private static OleDbParameter[] ForParameters(List<string> list)
+        private OleDbParameter[] ForParameters(List<string> list)
         {
             var result = new List<OleDbParameter>(list.Count);
             for (var i = 0; i < list.Count; ++i)
@@ -157,7 +158,7 @@ namespace JsonConverter
             return result.ToArray();
         }
 
-        private static string ForTitleString(List<string> list)
+        private string ForTitleString(List<string> list)
         {
             var result = new StringBuilder();
             for (var i = 0; i < list.Count; ++i)
@@ -166,7 +167,7 @@ namespace JsonConverter
             return result.ToString().Substring(0, result.Length - 1);
         }
 
-        private static string ForValueString(List<string> list)
+        private string ForValueString(List<string> list)
         {
             var result = new StringBuilder();
             for (var i = 0; i < list.Count; ++i)
@@ -174,48 +175,6 @@ namespace JsonConverter
 
             return result.ToString().Substring(0, result.Length - 1);
         }
-
-        private static List<string> ForTitleList(List<Dictionary<string, string>> jsonData)
-        {
-            var result = new List<string>();
-
-            if (null != jsonData)
-            {
-                // 彙整全部資料裡面所有存在的key
-                for (var i = 0; i < jsonData.Count; ++i)
-                {
-                    var iterator = jsonData[i].Keys.GetEnumerator();
-                    while (iterator.MoveNext())
-                    {
-                        var key = iterator.Current;
-                        if (false == result.Contains(key))
-                            result.Add(key);
-                    }
-                }
-            }
-
-            return result;
-        }
-
-        private static List<List<string>> ForValueList(List<Dictionary<string, string>> jsonData, List<string> titleList)
-        {
-            var result = new List<List<string>>();
-
-            for (var i = 0; i < jsonData.Count; ++i)
-            {
-                var data = jsonData[i];
-                var values = new List<string>(titleList.Count);
-                // 依照欄位的順序，將資料放在一樣順序的位置上
-                for (var j = 0; j < titleList.Count; ++j)
-                {
-                    if (data.TryGetValue(titleList[j], out var value))
-                        values.Add(value);
-                }
-                result.Add(values);
-            }
-
-            return result;
-        }
-        #endregion Save
+        #endregion Write
     }
 }
