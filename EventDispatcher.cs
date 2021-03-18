@@ -19,6 +19,8 @@
         public event EventHandler UpdateInformation;
         public event EventHandler UpdateInformationWithFilePath;
         public event EventHandler ShowMessageBox;
+        public event EventHandler CommandLineExecuteStart;
+        public event EventHandler CommandLineExecuteEnd;
 
         public void OnUpdateInformation(string information)
             => UpdateInformation(this, information);
@@ -28,5 +30,11 @@
 
         public void OnShowMessageBox(string message)
             => ShowMessageBox(this, message);
+
+        public void OnCommandLineExecuteStart()
+            => CommandLineExecuteStart(this);
+
+        public void OnCommandLineExecuteEnd()
+            => CommandLineExecuteEnd(this);
     }
 }

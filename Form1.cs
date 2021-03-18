@@ -16,9 +16,10 @@ namespace JsonConverter
             EventDispatcher.instance.UpdateInformation += Instance_UpdateInformation;
             EventDispatcher.instance.UpdateInformationWithFilePath += Instance_UpdateInformationWithFilePath;
             EventDispatcher.instance.ShowMessageBox += Instance_ShowMessageBox;
+            EventDispatcher.instance.CommandLineExecuteStart += Instance_CommandLineExecuteStart;
+            EventDispatcher.instance.CommandLineExecuteEnd += Instance_CommandLineExecuteEnd;
             this.filePathLabel.DragEnter += Form1_DragEnter;
             this.filePathLabel.DragDrop += Form1_DragDrop;
-            this.convertToCombo.SelectedValueChanged += ConvertToCombo_SelectedValueChanged;
 
             Main.instance.CheckCommandLineInput();
         }
@@ -47,7 +48,11 @@ namespace JsonConverter
 
         private async void convertBtn_Click(object sender, EventArgs e)
         {
+            this.convertBtn.Enabled = false;
+
             await Main.instance.StartConvertAsync(filePathLabel.Text, (FileType)convertToCombo.SelectedItem);
+
+            this.convertBtn.Enabled = true;
         }
 
         public void OnGetFilePath(string filePath)
@@ -86,16 +91,12 @@ namespace JsonConverter
             convertToCombo.Enabled = true;
         }
 
-        private void ConvertToCombo_SelectedValueChanged(object sender, EventArgs e)
-        {
-            
-        }
-
         private void UpdateInfoLabel(string info)
         {
             infoLabel.Text = info;
         }
 
+        #region Dispatch Event
         private void Instance_UpdateInformation(object sender, params object[] args)
         {
             var info = (string)args[0];
@@ -118,5 +119,12 @@ namespace JsonConverter
 
             MessageBox.Show(message);
         }
+
+        private void Instance_CommandLineExecuteStart(object sender, params object[] args)
+            => this.convertBtn.Enabled = false;
+
+        private void Instance_CommandLineExecuteEnd(object sender, params object[] args)
+            => this.convertBtn.Enabled = true;
+        #endregion Dispatch Event
     }
 }

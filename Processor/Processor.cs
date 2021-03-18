@@ -8,6 +8,21 @@ namespace JsonConverter
         public abstract Task<List<Dictionary<string, string>>> ReadFileAsync(string filePath);
         public abstract Task WriteFileAsync(List<Dictionary<string, string>> jsonData, string savePath);
 
+        public static IProcess CreateProcessor(FileType type)
+        {
+            switch (type)
+            {
+                case FileType.json:
+                    return new JsonProcessor();
+                case FileType.csv:
+                    return new CsvProcessor();
+                case FileType.xlsx:
+                    return new ExcelProcessor();
+                default:
+                    return null;
+            }
+        }
+
         /// <summary>取出所有 Column 名稱</summary>
         protected virtual List<string> ForTitleList(List<Dictionary<string, string>> jsonData)
         {
