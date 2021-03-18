@@ -11,31 +11,52 @@ namespace JsonConverter
 {
     class ExcelProcessor : Processor
     {
+        /// <summary>
+        /// 提供者名稱  Microsoft.Jet.OLEDB.4.0適用於2003以前版本，Microsoft.ACE.OLEDB.12.0 適用於2007以後的版本處理 xlsx 檔案
+        /// </summary>
+        protected virtual string providerName { private set; get; } = "Microsoft.ACE.OLEDB.12.0;";
+        /// <summary>
+        /// Excel版本，Excel 8.0 針對Excel2000及以上版本，Excel5.0 針對Excel97
+        /// </summary>
+        protected virtual string extendedString { private set; get; } = "Excel 8.0";
+
         public override Task<List<Dictionary<string, string>>> ReadFileAsync(string filePath)
             => Task.Run(() => ReadXlsxData(filePath));
 
         public override Task WriteFileAsync(List<Dictionary<string, string>> jsonData, string savePath)
             => Task.Run(() => WriteXlsxData(jsonData, savePath));
 
+        /// <summary>
+        /// 取得連結Excel檔案的字串
+        /// </summary>
+        /// <param name="filePath">檔案開啟路徑</param>
+        /// <param name="HDR">第一行是否為標題</param>
+        /// <param name="IMEX">IMEX=1 通知驅動程序始終將「互混」數據列作為文本讀取</param>
+        private string ForOledbConnectString(string filePath, string HDR = "", string IMEX = "")
+        {
+            // 每個參數用 ";" 結尾區隔
+            var extendedProperties = string.Concat(extendedString, ";");
+            if (!string.IsNullOrEmpty(HDR))
+                extendedProperties = string.Concat(extendedProperties, $"HDR={HDR};");
+            if (!string.IsNullOrEmpty(IMEX))
+                extendedProperties = string.Concat(extendedProperties, $"IMEX={IMEX};");
+
+            var result = string.Format("Data Source={0};Provider={1}Extended Properties='{2}';",
+                filePath,
+                providerName,
+                extendedProperties.Substring(0, extendedProperties.Length - 1));    // 最後一個參數不用 ";"
+
+            return result;
+        }
+
         #region Read
         private List<Dictionary<string, string>> ReadXlsxData(string filePath)
         {
-            // 提供者名稱  Microsoft.Jet.OLEDB.4.0適用於2003以前版本，Microsoft.ACE.OLEDB.12.0 適用於2007以後的版本處理 xlsx 檔案
-            var providerName = "Microsoft.ACE.OLEDB.12.0;";
-            // Excel版本，Excel 8.0 針對Excel2000及以上版本，Excel5.0 針對Excel97。
-            var extendedString = "'Excel 8.0;";
-            // 第一行是否為標題(;結尾區隔)
-            var HDR = "No;";
-            // IMEX=1 通知驅動程序始終將「互混」數據列作為文本讀取(;結尾區隔,'文字結尾)
-            var IMEX = "1';";
-            var connectString =
-                $"Data Source={filePath};Provider={providerName}Extended Properties={extendedString}HDR={HDR}IMEX={IMEX}";
-
             var dataTable = new DataTable();
-            using (OleDbConnection connect = new OleDbConnection(connectString))
+            using (OleDbConnection connect = new OleDbConnection(ForOledbConnectString(filePath, "No", "1")))
                 ForDataTable(connect, ForFirstSheetTableName(connect), dataTable);
 
-            return ConvertToJsonData(dataTable);
+            return ForJsonData(dataTable);
         }
 
         private DataTable ForDataTable(OleDbConnection connect, string sheetName, DataTable result)
@@ -73,10 +94,10 @@ namespace JsonConverter
             return result;
         }
 
-        private List<Dictionary<string, string>> ConvertToJsonData(DataTable dataTable)
+        private List<Dictionary<string, string>> ForJsonData(DataTable dataTable)
         {
             var result = new List<Dictionary<string, string>>();
-            var keys = ForTableKeys(dataTable);
+            var keys = ForDataTableColumnsName(dataTable);
 
             for (var i = 1; i < dataTable.Rows.Count; ++i)
             {
@@ -91,7 +112,7 @@ namespace JsonConverter
             return result;
         }
 
-        private string[] ForTableKeys(DataTable dataTable)
+        private string[] ForDataTableColumnsName(DataTable dataTable)
         {
             return Array.ConvertAll(dataTable.Rows[0].ItemArray, ConvertToString);
 
@@ -106,17 +127,7 @@ namespace JsonConverter
             if (File.Exists(savePath))
                 File.Delete(savePath);
 
-            // 提供者名稱  Microsoft.Jet.OLEDB.4.0適用於2003以前版本，Microsoft.ACE.OLEDB.12.0 適用於2007以後的版本處理 xlsx 檔案
-            var providerName = "Microsoft.ACE.OLEDB.12.0;";
-            // Excel版本，Excel 8.0 針對Excel2000及以上版本，Excel5.0 針對Excel97。
-            var extendedString = "'Excel 8.0;";
-            // 第一行是否為標題(;結尾區隔)
-            var HDR = "Yes';";
-
-            var connectString =
-                $"Data Source={savePath};Provider={providerName}Extended Properties={extendedString}HDR={HDR}";
-
-            using (var connect = new OleDbConnection(connectString))
+            using (var connect = new OleDbConnection(ForOledbConnectString(savePath, "Yes")))
             {
                 try
                 {
@@ -136,7 +147,7 @@ namespace JsonConverter
                     for (var i = 0; i < valueList.Count; ++i)
                     {
                         for (var j = 0; j < titleList.Count; ++j)
-                            cmd.Parameters["@" + titleList[j]].Value = valueList[i][j];
+                            cmd.Parameters[$"@{titleList[j]}"].Value = valueList[i][j];
 
                         await cmd.ExecuteNonQueryAsync();
                     }
@@ -153,7 +164,7 @@ namespace JsonConverter
         {
             var result = new List<OleDbParameter>(list.Count);
             for (var i = 0; i < list.Count; ++i)
-                result.Add(new OleDbParameter("@" + list[i], string.Empty));
+                result.Add(new OleDbParameter($"@{list[i]}", string.Empty));
 
             return result.ToArray();
         }

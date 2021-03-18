@@ -78,10 +78,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="CsvHelper.cs" />
     <Compile Include="Define.cs" />
     <Compile Include="EventDispatcher.cs" />
-    <Compile Include="ExcelHelper.cs" />
     <Compile Include="Form1.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -91,7 +89,6 @@
     <Compile Include="Processor\CsvProcessor.cs" />
     <Compile Include="Processor\ExcelProcessor.cs" />
     <Compile Include="Processor\IProcess.cs" />
-    <Compile Include="JsonHelper.cs" />
     <Compile Include="Main.cs" />
     <Compile Include="Message.cs" />
     <Compile Include="Processor\JsonProcessor.cs" />

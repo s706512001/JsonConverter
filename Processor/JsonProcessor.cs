@@ -25,9 +25,9 @@ namespace JsonConverter
             }
 
             var jsonString = File.ReadAllText(jsonFilePath, Encoding.UTF8);
-            var list = JsonConvert.DeserializeObject<List<Dictionary<string, string>>>(jsonString);
+            var result = JsonConvert.DeserializeObject<List<Dictionary<string, string>>>(jsonString);
 
-            return list;
+            return result;
         }
 
         private static void WriteJsonFile(List<Dictionary<string, string>> jsonData, string savePath)

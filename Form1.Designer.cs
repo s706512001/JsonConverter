@@ -124,6 +124,7 @@ namespace JsonConverter
             // convertToCombo
             // 
             this.convertToCombo.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.convertToCombo.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.convertToCombo.Enabled = false;
             this.convertToCombo.Font = new System.Drawing.Font("Consolas", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.convertToCombo.FormattingEnabled = true;

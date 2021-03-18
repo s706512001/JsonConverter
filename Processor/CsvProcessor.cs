@@ -58,21 +58,21 @@ namespace JsonConverter
                 using (var csv = new CsvWriter(write, CultureInfo.InvariantCulture))
                 {
                     // 先寫入標題資料
-                    for (var i = 0; i < titleList.Count; ++i)
-                        csv.WriteField(titleList[i]);
+                    WriteNewRow(csv, titleList);
 
-                    csv.NextRecord();
                     // 再寫入內容資料
                     for (var i = 0; i < valueList.Count; ++i)
-                    {
-                        var value = valueList[i];
-                        for (var j = 0; j < value.Count; ++j)
-                            csv.WriteField(value[j]);
-
-                        csv.NextRecord();
-                    }
+                        WriteNewRow(csv, valueList[i]);
                 }
             }
+        }
+
+        private void WriteNewRow(CsvWriter csv, List<string> data)
+        {
+            for (var j = 0; j < data.Count; ++j)
+                csv.WriteField(data[j]);
+            // 換行
+            csv.NextRecord();
         }
     }
 }
