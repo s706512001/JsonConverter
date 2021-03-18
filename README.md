@@ -31,3 +31,19 @@ ConvertTo Type (大小寫不拘)
   
 不在此範圍內的轉換方案，理應會在 information 位置顯示錯誤訊息
 ```
+
+### Json Fromat
+
+```
+[
+    {
+        key: value,
+        ...
+    },
+    {
+        key: value,
+        ...
+    },
+    ...
+]
+```
